@@ -1,0 +1,24 @@
+# --- IDE ---
+.idea/
+.vscode/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# --- Env / secrets ---
+.env
+*.env
+!.env.example
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Duplicates (macOS copy artifacts) ---
+* 2.*
+* 2
