@@ -83,15 +83,15 @@ const productImagesById: Record<string, string> = {
   'olive-cup': oliveCupImage,
 }
 
-const productCategories = ['Рабочий стол', 'Бумага', 'Аксессуары', 'Хранение']
+const productCategories = ['Desk', 'Paper', 'Accessories', 'Storage']
 
-const currencyFormatter = new Intl.NumberFormat('ru-RU', {
+const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
-  currency: 'RUB',
+  currency: 'USD',
   maximumFractionDigits: 0,
 })
 
-const timeFormatter = new Intl.DateTimeFormat('ru-RU', {
+const timeFormatter = new Intl.DateTimeFormat('en-US', {
   hour: '2-digit',
   minute: '2-digit',
   second: '2-digit',
@@ -216,8 +216,8 @@ function normalizeProduct(value: unknown, index: number): Product {
 
   return {
     id,
-    name: readString(record, ['name', 'title'], `Товар ${index + 1}`),
-    description: readString(record, ['description', 'details'], 'Описание скоро появится.'),
+    name: readString(record, ['name', 'title'], `Product ${index + 1}`),
+    description: readString(record, ['description', 'details'], 'Description coming soon.'),
     price,
     image: readString(
       record,
@@ -265,7 +265,7 @@ function normalizeOrder(
   const id = readString(record, ['id', 'order_id', 'orderId'], '')
 
   if (!id) {
-    throw new ApiError(502, 'API вернул заказ без идентификатора.')
+    throw new ApiError(502, 'The API returned an order without an ID.')
   }
 
   return {
@@ -307,22 +307,22 @@ function extractApiMessage(value: unknown): string | null {
 
 function getRequestErrorMessage(error: unknown, fallback: string): string {
   if (!(error instanceof ApiError)) {
-    return 'Не удалось связаться с магазином. Проверьте подключение и попробуйте ещё раз.'
+    return 'Could not reach the store. Check your connection and try again.'
   }
 
   if (error.status === 401) {
-    return 'Сессия истекла или данные для входа неверны.'
+    return 'Your session has expired or the login details are incorrect.'
   }
 
   if (error.status === 404) {
-    return 'Запрашиваемые данные не найдены.'
+    return 'The requested data was not found.'
   }
 
   if (error.status === 422) {
-    return `Проверьте введённые данные: ${error.message}`
+    return `Please check your input: ${error.message}`
   }
 
-  return error.status >= 500 ? `${fallback} Сервис временно недоступен.` : error.message
+  return error.status >= 500 ? `${fallback} The service is temporarily unavailable.` : error.message
 }
 
 async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -352,7 +352,7 @@ async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
 
     throw new ApiError(
       response.status,
-      extractApiMessage(payload) ?? response.statusText ?? 'Ошибка API',
+      extractApiMessage(payload) ?? response.statusText ?? 'API error',
     )
   }
 

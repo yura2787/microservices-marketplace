@@ -1,7 +1,8 @@
 from contextlib import asynccontextmanager
 
 from aiokafka import AIOKafkaProducer
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, Request, status
+from fastapi.responses import JSONResponse
 
 from app.database import engine
 from app.models import Base
@@ -9,7 +10,7 @@ from app.schemas import PaymentCreateSchema, PaymentReadSchema
 from app.service import PaymentService
 from app.dependencies import get_payment_service
 from app.rabbitmq import declare_payment_exchange, connect_rabbitmq
-from app.config import settings
+from app.config import NotFoundError, settings
 from app.kafka import create_kafka_producer
 
 
@@ -30,11 +31,19 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
-        kafka_producer.stop()
-        rabbitmq_connection.close()
+        await kafka_producer.stop()
+        await rabbitmq_connection.close()
 
 
 app = FastAPI(lifespan=lifespan)
+
+
+@app.exception_handler(NotFoundError)
+async def not_found_handler(_: Request, __: NotFoundError):
+    return JSONResponse(
+        status_code=status.HTTP_404_NOT_FOUND,
+        content={"detail": "Payment not found"},
+    )
 
 
 @app.get("/payments/{payment_id}", response_model=PaymentReadSchema)

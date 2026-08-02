@@ -16,6 +16,8 @@ async def handle_payment_events(message: AbstractIncomingMessage):
         event = json.loads(message.body.decode("utf-8"))
         with SessionLocal() as session:
             order = session.get(Order, event["order_id"])
+            if order is None:
+                return
             order.status = "paid"
             session.commit()
 

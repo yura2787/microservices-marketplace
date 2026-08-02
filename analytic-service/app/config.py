@@ -6,6 +6,7 @@ class Settings(BaseSettings):
 
     kafka_bootstrap_servers: str = "localhost:9092"
     kafka_topic: str = "payment-events"
+    kafka_order_topic: str = "order-events"
     mongodb_url: str = (
         "mongodb://analytics:analytics@localhost:27017/"
     )

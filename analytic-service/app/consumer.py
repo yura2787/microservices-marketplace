@@ -13,6 +13,7 @@ async def save_event(collection: Collection, message: ConsumerRecord):
 async def consume_events(collection: Collection):
     consumer = AIOKafkaConsumer(
         settings.kafka_topic,
+        settings.kafka_order_topic,
         bootstrap_servers=settings.kafka_bootstrap_servers
     )
 

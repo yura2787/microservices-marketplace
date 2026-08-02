@@ -1,16 +1,16 @@
 from pydantic import BaseModel, ConfigDict
 
 
+class OrderItemCreateSchema(BaseModel):
+    product_id: str
+    quantity: int
+
+
 class OrderCreateSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     user_id: str
     items: list[OrderItemCreateSchema]
-
-
-class OrderItemCreateSchema(BaseModel):
-    product_id: str
-    quantity: int
 
 
 class OrderItemReadSchema(BaseModel):
