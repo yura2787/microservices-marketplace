@@ -14,7 +14,7 @@
   align-items: center;
   padding: 14px 0;
   border-bottom: 1px solid var(--line);
-  background: rgba(247, 242, 231, 0.88);
+  background: rgba(238, 241, 247, 0.88);
   backdrop-filter: blur(16px);
 }
 
@@ -32,8 +32,8 @@
   border: 1px solid var(--line-strong);
   border-radius: 50%;
   background:
-    linear-gradient(90deg, transparent 0 36%, rgba(174, 136, 57, 0.22) 37% 41%, transparent 42% 58%, rgba(174, 136, 57, 0.18) 59% 63%, transparent 64%),
-    rgba(255, 252, 245, 0.86);
+    linear-gradient(90deg, transparent 0 36%, rgba(79, 107, 237, 0.28) 37% 41%, transparent 42% 58%, rgba(79, 107, 237, 0.22) 59% 63%, transparent 64%),
+    rgba(255, 255, 255, 0.9);
 }
 
 .brand strong,

@@ -83,15 +83,15 @@ const productImagesById: Record<string, string> = {
   'olive-cup': oliveCupImage,
 }
 
-const productCategories = ['Рабочий стол', 'Бумага', 'Аксессуары', 'Хранение']
+const productCategories = ['Desk', 'Paper', 'Accessories', 'Storage']
 
-const currencyFormatter = new Intl.NumberFormat('ru-RU', {
+const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
-  currency: 'RUB',
+  currency: 'USD',
   maximumFractionDigits: 0,
 })
 
-const timeFormatter = new Intl.DateTimeFormat('ru-RU', {
+const timeFormatter = new Intl.DateTimeFormat('en-US', {
   hour: '2-digit',
   minute: '2-digit',
   second: '2-digit',
@@ -216,8 +216,8 @@ function normalizeProduct(value: unknown, index: number): Product {
 
   return {
     id,
-    name: readString(record, ['name', 'title'], `Товар ${index + 1}`),
-    description: readString(record, ['description', 'details'], 'Описание скоро появится.'),
+    name: readString(record, ['name', 'title'], `Product ${index + 1}`),
+    description: readString(record, ['description', 'details'], 'Description coming soon.'),
     price,
     image: readString(
       record,
@@ -265,7 +265,7 @@ function normalizeOrder(
   const id = readString(record, ['id', 'order_id', 'orderId'], '')
 
   if (!id) {
-    throw new ApiError(502, 'API вернул заказ без идентификатора.')
+    throw new ApiError(502, 'The API returned an order without an ID.')
   }
 
   return {
@@ -307,22 +307,22 @@ function extractApiMessage(value: unknown): string | null {
 
 function getRequestErrorMessage(error: unknown, fallback: string): string {
   if (!(error instanceof ApiError)) {
-    return 'Не удалось связаться с магазином. Проверьте подключение и попробуйте ещё раз.'
+    return 'Could not reach the store. Check your connection and try again.'
   }
 
   if (error.status === 401) {
-    return 'Сессия истекла или данные для входа неверны.'
+    return 'Your session has expired or the login details are incorrect.'
   }
 
   if (error.status === 404) {
-    return 'Запрашиваемые данные не найдены.'
+    return 'The requested data was not found.'
   }
 
   if (error.status === 422) {
-    return `Проверьте введённые данные: ${error.message}`
+    return `Please check your input: ${error.message}`
   }
 
-  return error.status >= 500 ? `${fallback} Сервис временно недоступен.` : error.message
+  return error.status >= 500 ? `${fallback} The service is temporarily unavailable.` : error.message
 }
 
 async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -352,7 +352,7 @@ async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
 
     throw new ApiError(
       response.status,
-      extractApiMessage(payload) ?? response.statusText ?? 'Ошибка API',
+      extractApiMessage(payload) ?? response.statusText ?? 'API error',
     )
   }
 
@@ -424,10 +424,10 @@ function formatMoney(value: number): string {
 
 function formatStatus(status: OrderStatus): string {
   const labels: Record<OrderStatus, string> = {
-    created: 'Заказ создан',
-    payment_pending: 'Ожидает оплату',
-    paid: 'Оплачен',
-    payment_failed: 'Оплата не прошла',
+    created: 'Order created',
+    payment_pending: 'Awaiting payment',
+    paid: 'Paid',
+    payment_failed: 'Payment failed',
   }
 
   return labels[status]
@@ -441,19 +441,19 @@ function getTimeline(status: OrderStatus): TimelineStep[] {
   return [
     {
       key: 'created',
-      label: 'Заказ принят',
-      description: 'Мы получили ваш заказ',
+      label: 'Order received',
+      description: 'We have received your order',
       state: 'done',
     },
     {
       key: 'payment',
-      label: 'Оплата',
+      label: 'Payment',
       description:
         status === 'payment_failed'
-          ? 'Платёж отклонён'
+          ? 'Payment declined'
           : status === 'paid'
-            ? 'Платёж подтверждён'
-            : 'Проверяем оплату',
+            ? 'Payment confirmed'
+            : 'Verifying payment',
       state:
         status === 'payment_failed'
           ? 'failed'
@@ -463,13 +463,13 @@ function getTimeline(status: OrderStatus): TimelineStep[] {
     },
     {
       key: 'completed',
-      label: 'Готово',
+      label: 'Done',
       description:
         status === 'paid'
-          ? 'Заказ оплачен'
+          ? 'Order paid'
           : status === 'payment_failed'
-            ? 'Заказ не оплачен'
-            : 'Ожидаем подтверждение',
+            ? 'Order not paid'
+            : 'Awaiting confirmation',
       state: status === 'paid' ? 'done' : status === 'payment_failed' ? 'failed' : 'pending',
     },
   ]
@@ -478,15 +478,15 @@ function getTimeline(status: OrderStatus): TimelineStep[] {
 function getEventDefinitions(order: OrderDetails): Omit<EventEntry, 'id' | 'time'>[] {
   const events: Omit<EventEntry, 'id' | 'time'>[] = [
     {
-      title: 'Заказ принят',
-      detail: `Номер ${order.id}`,
+      title: 'Order received',
+      detail: `Order ${order.id}`,
       tone: 'neutral',
     },
   ]
 
   if (order.status !== 'created') {
     events.push({
-      title: 'Статус заказа обновлён',
+      title: 'Order status updated',
       detail: formatStatus(order.status),
       tone: 'neutral',
     })
@@ -494,16 +494,16 @@ function getEventDefinitions(order: OrderDetails): Omit<EventEntry, 'id' | 'time
 
   if (order.status === 'paid') {
     events.push({
-      title: 'Оплата прошла',
-      detail: `${formatMoney(order.totalAmount)} оплачено`,
+      title: 'Payment succeeded',
+      detail: `${formatMoney(order.totalAmount)} paid`,
       tone: 'success',
     })
   }
 
   if (order.status === 'payment_failed') {
     events.push({
-      title: 'Оплата не прошла',
-      detail: 'Можно попробовать оформить заказ ещё раз',
+      title: 'Payment failed',
+      detail: 'You can try placing the order again',
       tone: 'danger',
     })
   }
@@ -592,7 +592,7 @@ function App() {
           storeAccessToken(null)
           setAuthToken(null)
         } else {
-          setAuthError(getRequestErrorMessage(error, 'Не удалось проверить сохранённую сессию.'))
+          setAuthError(getRequestErrorMessage(error, 'Could not verify the saved session.'))
         }
       }
     }
@@ -613,7 +613,7 @@ function App() {
       setProducts(catalog)
     } catch (error) {
       setProducts([])
-      setCatalogError(getRequestErrorMessage(error, 'Не удалось загрузить каталог.'))
+      setCatalogError(getRequestErrorMessage(error, 'Could not load the catalog.'))
     } finally {
       setCatalogLoading(false)
     }
@@ -644,8 +644,8 @@ function App() {
       } catch (error) {
         const fallback =
           authMode === 'login'
-            ? 'Не удалось войти.'
-            : 'Не удалось зарегистрироваться. Возможно, этот email уже используется.'
+            ? 'Could not sign in.'
+            : 'Could not sign up. This email may already be in use.'
         setAuthError(getRequestErrorMessage(error, fallback))
       } finally {
         setAuthSubmitting(false)
@@ -675,7 +675,7 @@ function App() {
     }
 
     if (!authToken || authStatus !== 'authenticated') {
-      setOrderError('Войдите или зарегистрируйтесь, чтобы оформить заказ.')
+      setOrderError('Sign in or sign up to place an order.')
       return
     }
 
@@ -691,7 +691,7 @@ function App() {
         handleLogout()
       }
 
-      setOrderError(getRequestErrorMessage(error, 'Не удалось создать заказ.'))
+      setOrderError(getRequestErrorMessage(error, 'Could not create the order.'))
     } finally {
       setCreatingOrder(false)
     }
@@ -758,9 +758,9 @@ function App() {
         if (!cancelled) {
           if (error instanceof ApiError && error.status === 401) {
             handleLogout()
-            setOrderError('Сессия истекла. Войдите снова, чтобы продолжить.')
+            setOrderError('Your session has expired. Sign in again to continue.')
           } else {
-            setOrderError(getRequestErrorMessage(error, 'Не удалось обновить статус заказа.'))
+            setOrderError(getRequestErrorMessage(error, 'Could not update the order status.'))
           }
         }
       }
@@ -787,26 +787,26 @@ function App() {
           <span className="brand-mark" aria-hidden="true" />
           <span>
             <strong>OrderFlow</strong>
-            <small>аксессуары для дома и офиса</small>
+            <small>accessories for home and office</small>
           </span>
         </a>
 
-        <nav className="shop-nav" aria-label="Навигация">
-          <a href="#catalog">Каталог</a>
-          <a href="#cart">Корзина</a>
-          <a href="#status">Заказ</a>
+        <nav className="shop-nav" aria-label="Navigation">
+          <a href="#catalog">Catalog</a>
+          <a href="#cart">Cart</a>
+          <a href="#status">Order</a>
         </nav>
 
       </header>
 
       <section className="shop-intro">
         <div>
-          <p className="eyebrow">Новая коллекция</p>
-          <h1>Спокойные вещи для стола и документов</h1>
+          <p className="eyebrow">New collection</p>
+          <h1>Calm things for your desk and documents</h1>
         </div>
         <p>
-          Натуральные фактуры, спокойные оттенки и продуманные детали для рабочего
-          пространства, в котором приятно проводить каждый день.
+          Natural textures, calm tones and thoughtful details for a workspace
+          that feels good to spend every day in.
         </p>
       </section>
 
@@ -814,11 +814,11 @@ function App() {
         <section className="catalog-section" id="catalog" aria-labelledby="catalog-title">
           <div className="section-heading">
             <div>
-              <p className="eyebrow">Каталог</p>
-              <h2 id="catalog-title">Выберите товары</h2>
+              <p className="eyebrow">Catalog</p>
+              <h2 id="catalog-title">Choose your products</h2>
             </div>
             <button className="secondary-button" type="button" onClick={loadCatalog}>
-              Обновить
+              Refresh
             </button>
           </div>
 
@@ -850,7 +850,7 @@ function App() {
                       <div className="product-actions">
                         <strong>{formatMoney(product.price)}</strong>
                         <button type="button" onClick={() => changeQuantity(product.id, 1)}>
-                          В корзину
+                          Add to cart
                         </button>
                       </div>
                     </article>
@@ -859,7 +859,7 @@ function App() {
           </div>
 
           {!catalogLoading && !products.length ? (
-            <p className="empty-state">В каталоге пока нет товаров.</p>
+            <p className="empty-state">There are no products in the catalog yet.</p>
           ) : null}
         </section>
 
@@ -867,30 +867,30 @@ function App() {
           <section className="auth-card" id="account" aria-labelledby="account-title">
             <div className="section-heading compact">
               <div>
-                <p className="eyebrow">Аккаунт</p>
+                <p className="eyebrow">Account</p>
                 <h2 id="account-title">
-                  {authStatus === 'authenticated' ? 'Вы вошли' : 'Вход для заказа'}
+                  {authStatus === 'authenticated' ? 'Signed in' : 'Sign in to order'}
                 </h2>
               </div>
             </div>
 
             {authStatus === 'checking' ? (
               <p className="empty-state" aria-live="polite">
-                Проверяем сессию...
+                Checking your session...
               </p>
             ) : authStatus === 'authenticated' && authUser ? (
               <div className="account-summary">
                 <div>
-                  <span>Покупатель</span>
+                  <span>Customer</span>
                   <strong>{authUser.email}</strong>
                 </div>
                 <button className="secondary-button" type="button" onClick={handleLogout}>
-                  Выйти
+                  Sign out
                 </button>
               </div>
             ) : (
               <>
-                <div className="auth-tabs" role="tablist" aria-label="Способ авторизации">
+                <div className="auth-tabs" role="tablist" aria-label="Authentication method">
                   <button
                     className={authMode === 'login' ? 'active' : ''}
                     type="button"
@@ -901,7 +901,7 @@ function App() {
                       setAuthError(null)
                     }}
                   >
-                    Войти
+                    Sign in
                   </button>
                   <button
                     className={authMode === 'register' ? 'active' : ''}
@@ -913,7 +913,7 @@ function App() {
                       setAuthError(null)
                     }}
                   >
-                    Регистрация
+                    Sign up
                   </button>
                 </div>
 
@@ -930,14 +930,14 @@ function App() {
                     />
                   </label>
                   <label>
-                    <span>Пароль</span>
+                    <span>Password</span>
                     <input
                       type="password"
                       value={authPassword}
                       autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
                       minLength={8}
                       maxLength={128}
-                      placeholder="Минимум 8 символов"
+                      placeholder="At least 8 characters"
                       required
                       onChange={(event) => setAuthPassword(event.target.value)}
                     />
@@ -951,10 +951,10 @@ function App() {
 
                   <button className="primary-button auth-submit" type="submit" disabled={authSubmitting}>
                     {authSubmitting
-                      ? 'Подождите...'
+                      ? 'Please wait...'
                       : authMode === 'login'
-                        ? 'Войти'
-                        : 'Создать аккаунт'}
+                        ? 'Sign in'
+                        : 'Create account'}
                   </button>
                 </form>
               </>
@@ -964,8 +964,8 @@ function App() {
           <section className="checkout-card" id="cart" aria-labelledby="cart-title">
             <div className="section-heading compact">
               <div>
-                <p className="eyebrow">Корзина</p>
-                <h2 id="cart-title">Ваш заказ</h2>
+                <p className="eyebrow">Cart</p>
+                <h2 id="cart-title">Your order</h2>
               </div>
               <span className="cart-count">{selectedCount}</span>
             </div>
@@ -981,7 +981,7 @@ function App() {
                         {line.quantity} x {formatMoney(line.price)}
                       </span>
                     </div>
-                    <div className="stepper" aria-label={`Количество: ${line.name}`}>
+                    <div className="stepper" aria-label={`Quantity: ${line.name}`}>
                       <button type="button" onClick={() => changeQuantity(line.id, -1)}>
                         -
                       </button>
@@ -994,11 +994,11 @@ function App() {
                 ))}
               </ul>
             ) : (
-              <p className="empty-state">Добавьте товар из каталога, чтобы оформить заказ.</p>
+              <p className="empty-state">Add a product from the catalog to place an order.</p>
             )}
 
             <div className="total-row">
-              <span>Итого</span>
+              <span>Total</span>
               <strong>{formatMoney(totalAmount)}</strong>
             </div>
 
@@ -1011,10 +1011,10 @@ function App() {
               onClick={handleCreateOrder}
             >
               {creatingOrder
-                ? 'Оформляем...'
+                ? 'Placing order...'
                 : authStatus === 'authenticated'
-                  ? 'Оформить заказ'
-                  : 'Войдите для оформления'}
+                  ? 'Place order'
+                  : 'Sign in to check out'}
             </button>
 
             {orderError ? (
@@ -1025,7 +1025,7 @@ function App() {
 
             {currentOrder ? (
               <div className="order-receipt" aria-live="polite">
-                <span>Номер заказа</span>
+                <span>Order number</span>
                 <strong>{currentOrder.id}</strong>
               </div>
             ) : null}
@@ -1034,15 +1034,15 @@ function App() {
           <section className="status-card" id="status" aria-labelledby="status-title">
             <div className="section-heading compact">
               <div>
-                <p className="eyebrow">Статус</p>
-                <h2 id="status-title">Что с заказом</h2>
+                <p className="eyebrow">Status</p>
+                <h2 id="status-title">Order status</h2>
               </div>
             </div>
 
             {currentOrder ? (
               <>
                 <div className="status-summary" aria-live="polite">
-                  <span>Текущее состояние</span>
+                  <span>Current state</span>
                   <strong className={`status-pill ${currentOrder.status}`}>
                     {formatStatus(currentOrder.status)}
                   </strong>
@@ -1062,7 +1062,7 @@ function App() {
               </>
             ) : (
               <p className="empty-state">
-                Здесь можно следить за состоянием оформленного заказа.
+                Track the status of your placed order here.
               </p>
             )}
           </section>
@@ -1070,8 +1070,8 @@ function App() {
           <section className="history-card" aria-labelledby="history-title">
             <div className="section-heading compact">
               <div>
-                <p className="eyebrow">История</p>
-                <h2 id="history-title">Последние события</h2>
+                <p className="eyebrow">History</p>
+                <h2 id="history-title">Recent events</h2>
               </div>
             </div>
 
@@ -1088,7 +1088,7 @@ function App() {
                 ))}
               </ul>
             ) : (
-              <p className="empty-state">Здесь появятся последние обновления по заказу.</p>
+              <p className="empty-state">Recent order updates will appear here.</p>
             )}
           </section>
         </aside>

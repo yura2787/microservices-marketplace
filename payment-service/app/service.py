@@ -29,7 +29,7 @@ class PaymentService:
 
 
     async def get(self, payment_id: str):
-        payment = await self.session.get(payment, payment_id)
+        payment = await self.session.get(PaymentORM, payment_id)
         if payment is None:
             raise NotFoundError
 

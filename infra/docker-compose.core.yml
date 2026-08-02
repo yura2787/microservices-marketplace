@@ -73,6 +73,8 @@ services:
       PAYMENT_EXCHANGE_NAME: payment.events
       PAYMENT_QUEUE_NAME: payment.results
       PAYMENT_SUCCEEDED_ROUTING_KEY: payment.succeeded
+      KAFKA_BOOTSTRAP_SERVER: kafka:29092
+      KAFKA_ORDER_TOPIC: order-events
     expose:
       - "8000"
     depends_on:
@@ -83,6 +85,8 @@ services:
       payment-service:
         condition: service_started
       rabbitmq:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
 
   payment-service:
